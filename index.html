@@ -557,13 +557,13 @@
                                 </div>
                             </section>
                         </>
-                    ) : view === 'meta' ? (
-                        <MetaLeaderboard clients={clients} rankingsData={rankings} />
-                    ) : view === 'graveyard' ? (
-                        <Graveyard onNavigate={goToDetail} clients={clients} />
-                    ) : view === 'injector' ? (
-                        <InjectorPage />
-                    ) : (
+                    )}
+
+                    {view === 'meta' && <MetaLeaderboard clients={clients} rankingsData={rankings} />}
+                    {view === 'graveyard' && <Graveyard onNavigate={goToDetail} clients={clients} />}
+                    {view === 'injector' && <InjectorPage />}
+
+                    {view === 'detail' && selectedClient && (
                         <section className="pt-24 pb-20 px-4 max-w-5xl mx-auto min-h-screen">
                             <button onClick={goHome} className="mb-6 flex items-center gap-2 text-bone-muted hover:text-blood transition-colors font-mono text-sm"><ArrowLeft size={16} /> RETURN TO ARMORY</button>
                             {selectedClient && (
