@@ -116,11 +116,12 @@
         const { createClient } = window.supabase;
 
         // --- SUPABASE CONFIGURATION ---
-        // REPLACE THESE WITH YOUR REAL KEYS FROM SUPABASE DASHBOARD
         const SUPABASE_URL = "https://wzktbrakhdqmqvrgygtg.supabase.co"; 
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind6a3RicmFraGRxbXF2cmd5Z3RnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQyMjY3MDIsImV4cCI6MjA3OTgwMjcwMn0.hesAyEwWrCYCcX-C9pNx_PBM2TayaQXi4G029QBEEI8";
 
-        const isMockMode = SUPABASE_URL === "https://wzktbrakhdqmqvrgygtg.supabase.co";
+        // FIXED LOGIC: Only use mock if URL is the placeholder
+        const isMockMode = SUPABASE_URL === "YOUR_SUPABASE_URL_HERE";
+        
         let supabase = null;
         if (!isMockMode) {
             supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -148,29 +149,24 @@
             }
         };
 
-        // --- MOCK DATA ---
-        // 1. Clients Table Mock
+        // --- MOCK DATA (Only used if keys are missing) ---
         const mockClients = [
             { id: 1, name: "Meteor Client", author: "MeteorDev", version: "v0.5.3", type: "Utility", os: "Windows/Java", status: "Free", desc: "The standard for modern anarchy.", features: ["AutoCrystal", "ElytraFly"], updated: "2 days ago", verified: true, configUrl: "./artifacts/configs/meteor.cfg", downloadUrl: "./artifacts/meteor.dll" },
             { id: 2, name: "Prax V4", author: "PraxTeam", version: "v4.1.0", type: "CPvP", os: "Android/iOS", status: "Paid", price: "$15.00", desc: "Dominate the crystal meta. Optimized for Bedrock touch controls.", features: ["Touch Crystal", "Velocity"], updated: "1 week ago", verified: true, configUrl: "./artifacts/configs/prax.cfg", downloadUrl: null },
-            { id: 3, name: "VoidWalker CN", author: "Shadow_882", version: "Build 882", type: "Anarchy", os: "Android", status: "Private", desc: "Private Chinese bypasses. Works on NetEase and 2b2tPE.", features: ["NetEase Bypass", "Nuker"], updated: "Yesterday", verified: false, configUrl: null, downloadUrl: null },
+            { id: 3, name: "VoidWalker CN", author: "Shadow_882", version: "Build 882", type: "Anarchy", os: "Android", status: "Private", desc: "Private Chinese bypasses.", features: ["NetEase Bypass", "Nuker"], updated: "Yesterday", verified: false, configUrl: null, downloadUrl: null },
             { id: 4, name: "Toolbox Patched", author: "MrArm", version: "vLegacy", type: "Utility", os: "Android", status: "Archive", desc: "The legendary toolkit. No longer maintained but good for history.", features: ["NBT Editor", "Teleport"], updated: "2 years ago", verified: true, deathNote: "Patched by Mojang (1.19)", deathDate: "Nov 2022", configUrl: "./artifacts/configs/toolbox.cfg", downloadUrl: "./artifacts/toolbox.apk" },
             { id: 5, name: "Horion", author: "Horion Team", version: "v1.2.0", type: "Utility", os: "Windows 10/11", status: "Free", desc: "Best free utility for Windows Bedrock edition.", features: ["InstaBreak", "Scaffold"], updated: "3 days ago", verified: true, configUrl: "./artifacts/configs/horion.cfg", downloadUrl: "./artifacts/horion.dll" },
-            { id: 6, name: "Zephyr", author: "ZephyrDev", version: "v2.0", type: "CPvP", os: "Windows", status: "Free", desc: "Lightweight and deadly. Known for extreme reach in SPvP.", features: ["Reach", "Hitbox"], updated: "1 day ago", verified: true, configUrl: null, downloadUrl: "./artifacts/zephyr.dll" },
+            { id: 6, name: "Zephyr", author: "ZephyrDev", version: "v2.0", type: "CPvP", os: "Windows", status: "Free", desc: "Lightweight and deadly.", features: ["Reach", "Hitbox"], updated: "1 day ago", verified: true, configUrl: null, downloadUrl: "./artifacts/zephyr.dll" },
             { id: 7, name: "Fade Client", author: "FadeTeam", version: "v0.9-beta", type: "Anarchy", os: "Android", status: "Archive", desc: "Dev quit after drama. Open source now.", features: ["Fly", "Speed"], updated: "1 year ago", verified: false, deathNote: "Dev Abandoned", deathDate: "Jan 2024", configUrl: null, downloadUrl: "./artifacts/fade.apk" },
             { id: 8, name: "Osiris", author: "OsirisCorp", version: "v1.0", type: "Utility", os: "iOS", status: "Archive", desc: "iOS injected client.", features: ["Esp", "ChestStealer"], updated: "3 years ago", verified: true, deathNote: "iOS Security Update", deathDate: "Sept 2022", configUrl: null, downloadUrl: "./artifacts/osiris.dylib" }
         ];
 
-        // 2. Ranking Table Mock
         const mockRankingsData = [
             { client_id: 2, category: 'CPVP', rank: 1, note: "God Tier Crystal Speed" },
-            { client_id: 3, category: 'CPVP', rank: 1, note: "Best Bypass" }, // Tied
+            { client_id: 3, category: 'CPVP', rank: 1, note: "Best Bypass" },
             { client_id: 1, category: 'CPVP', rank: 2, note: "Solid Anchor Aura" },
-            { client_id: 5, category: 'CPVP', rank: 3, note: "Decent but outdated" },
             { client_id: 6, category: 'SPVP', rank: 1, note: "Reach is undetectable" },
-            { client_id: 2, category: 'SPVP', rank: 2, note: "Good Velocity" },
-            { client_id: 4, category: 'SPVP', rank: 2, note: "If you have priv method" }, // Tied
-            { client_id: 1, category: 'SPVP', rank: 3, note: "Too bulky" },
+            { client_id: 2, category: 'SPVP', rank: 2, note: "Good Velocity" }
         ];
 
         // --- ICONS ---
