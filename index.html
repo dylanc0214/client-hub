@@ -117,10 +117,10 @@
 
         // --- SUPABASE CONFIGURATION ---
         // REPLACE THESE WITH YOUR REAL KEYS FROM SUPABASE DASHBOARD
-        const SUPABASE_URL = "YOUR_SUPABASE_URL_HERE"; 
-        const SUPABASE_KEY = "YOUR_SUPABASE_ANON_KEY_HERE";
+        const SUPABASE_URL = "https://wzktbrakhdqmqvrgygtg.supabase.co"; 
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind6a3RicmFraGRxbXF2cmd5Z3RnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQyMjY3MDIsImV4cCI6MjA3OTgwMjcwMn0.hesAyEwWrCYCcX-C9pNx_PBM2TayaQXi4G029QBEEI8";
 
-        const isMockMode = SUPABASE_URL === "YOUR_SUPABASE_URL_HERE";
+        const isMockMode = SUPABASE_URL === "https://wzktbrakhdqmqvrgygtg.supabase.co";
         let supabase = null;
         if (!isMockMode) {
             supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -137,20 +137,31 @@
             document.body.removeChild(link);
         };
 
+        // --- HELPER: GET STATUS COLOR ---
+        const getStatusColor = (status) => {
+            switch(status) {
+                case 'Paid': return 'border-blood text-blood'; // Red
+                case 'Private': return 'border-purple-600 text-purple-500'; // Purple
+                case 'Archive': return 'border-yellow-600 text-yellow-500'; // Yellow
+                case 'Free': 
+                default: return 'border-green-600 text-green-500'; // Green
+            }
+        };
+
         // --- MOCK DATA ---
         // 1. Clients Table Mock
         const mockClients = [
             { id: 1, name: "Meteor Client", author: "MeteorDev", version: "v0.5.3", type: "Utility", os: "Windows/Java", status: "Free", desc: "The standard for modern anarchy.", features: ["AutoCrystal", "ElytraFly"], updated: "2 days ago", verified: true, configUrl: "./artifacts/configs/meteor.cfg", downloadUrl: "./artifacts/meteor.dll" },
-            { id: 2, name: "Prax V4", author: "PraxTeam", version: "v4.1.0", type: "CPvP", os: "Android/iOS", status: "Paid", price: "$15.00", desc: "Dominate the crystal meta.", features: ["Touch Crystal", "Velocity"], updated: "1 week ago", verified: true, configUrl: "./artifacts/configs/prax.cfg", downloadUrl: null },
-            { id: 3, name: "VoidWalker CN", author: "Shadow_882", version: "Build 882", type: "Anarchy", os: "Android", status: "Private", desc: "Private Chinese bypasses.", features: ["NetEase Bypass", "Nuker"], updated: "Yesterday", verified: false, configUrl: null, downloadUrl: null },
-            { id: 4, name: "Toolbox Patched", author: "MrArm", version: "vLegacy", type: "Utility", os: "Android", status: "Archive", desc: "Legendary toolkit.", features: ["NBT Editor", "Teleport"], updated: "2 years ago", verified: true, deathNote: "Patched by Mojang", deathDate: "Nov 2022", configUrl: "./artifacts/configs/toolbox.cfg", downloadUrl: "./artifacts/toolbox.apk" },
-            { id: 5, name: "Horion", author: "Horion Team", version: "v1.2.0", type: "Utility", os: "Windows 10/11", status: "Free", desc: "Best free utility.", features: ["InstaBreak", "Scaffold"], updated: "3 days ago", verified: true, configUrl: "./artifacts/configs/horion.cfg", downloadUrl: "./artifacts/horion.dll" },
-            { id: 6, name: "Zephyr", author: "ZephyrDev", version: "v2.0", type: "CPvP", os: "Windows", status: "Free", desc: "Lightweight and deadly.", features: ["Reach", "Hitbox"], updated: "1 day ago", verified: true, configUrl: null, downloadUrl: "./artifacts/zephyr.dll" },
-            { id: 7, name: "Fade Client", author: "FadeTeam", version: "v0.9-beta", type: "Anarchy", os: "Android", status: "Archive", desc: "Dev quit after drama.", features: ["Fly", "Speed"], updated: "1 year ago", verified: false, deathNote: "Dev Abandoned", deathDate: "Jan 2024", configUrl: null, downloadUrl: "./artifacts/fade.apk" },
+            { id: 2, name: "Prax V4", author: "PraxTeam", version: "v4.1.0", type: "CPvP", os: "Android/iOS", status: "Paid", price: "$15.00", desc: "Dominate the crystal meta. Optimized for Bedrock touch controls.", features: ["Touch Crystal", "Velocity"], updated: "1 week ago", verified: true, configUrl: "./artifacts/configs/prax.cfg", downloadUrl: null },
+            { id: 3, name: "VoidWalker CN", author: "Shadow_882", version: "Build 882", type: "Anarchy", os: "Android", status: "Private", desc: "Private Chinese bypasses. Works on NetEase and 2b2tPE.", features: ["NetEase Bypass", "Nuker"], updated: "Yesterday", verified: false, configUrl: null, downloadUrl: null },
+            { id: 4, name: "Toolbox Patched", author: "MrArm", version: "vLegacy", type: "Utility", os: "Android", status: "Archive", desc: "The legendary toolkit. No longer maintained but good for history.", features: ["NBT Editor", "Teleport"], updated: "2 years ago", verified: true, deathNote: "Patched by Mojang (1.19)", deathDate: "Nov 2022", configUrl: "./artifacts/configs/toolbox.cfg", downloadUrl: "./artifacts/toolbox.apk" },
+            { id: 5, name: "Horion", author: "Horion Team", version: "v1.2.0", type: "Utility", os: "Windows 10/11", status: "Free", desc: "Best free utility for Windows Bedrock edition.", features: ["InstaBreak", "Scaffold"], updated: "3 days ago", verified: true, configUrl: "./artifacts/configs/horion.cfg", downloadUrl: "./artifacts/horion.dll" },
+            { id: 6, name: "Zephyr", author: "ZephyrDev", version: "v2.0", type: "CPvP", os: "Windows", status: "Free", desc: "Lightweight and deadly. Known for extreme reach in SPvP.", features: ["Reach", "Hitbox"], updated: "1 day ago", verified: true, configUrl: null, downloadUrl: "./artifacts/zephyr.dll" },
+            { id: 7, name: "Fade Client", author: "FadeTeam", version: "v0.9-beta", type: "Anarchy", os: "Android", status: "Archive", desc: "Dev quit after drama. Open source now.", features: ["Fly", "Speed"], updated: "1 year ago", verified: false, deathNote: "Dev Abandoned", deathDate: "Jan 2024", configUrl: null, downloadUrl: "./artifacts/fade.apk" },
             { id: 8, name: "Osiris", author: "OsirisCorp", version: "v1.0", type: "Utility", os: "iOS", status: "Archive", desc: "iOS injected client.", features: ["Esp", "ChestStealer"], updated: "3 years ago", verified: true, deathNote: "iOS Security Update", deathDate: "Sept 2022", configUrl: null, downloadUrl: "./artifacts/osiris.dylib" }
         ];
 
-        // 2. Ranking Table Mock (This would be 'meta_rankings' in Supabase)
+        // 2. Ranking Table Mock
         const mockRankingsData = [
             { client_id: 2, category: 'CPVP', rank: 1, note: "God Tier Crystal Speed" },
             { client_id: 3, category: 'CPVP', rank: 1, note: "Best Bypass" }, // Tied
@@ -338,6 +349,7 @@
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                         {archivedClients.map(client => (
                             <div key={client.id} onClick={() => onNavigate(client)} className="cursor-pointer group relative bg-surface/30 border border-surface grayscale hover:grayscale-0 transition-all duration-500 p-8 flex flex-col h-full hover:bg-surface/50 hover:border-bone-muted/30">
+                                <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-32 h-8 bg-surface/30 rounded-t-full border-t border-l border-r border-surface group-hover:border-bone-muted/30 transition-all"></div>
                                 <div className="text-center mb-6 pt-4">
                                     <h3 className="font-gothic text-3xl text-bone-muted group-hover:text-bone transition-colors mb-1">{client.name}</h3>
                                     <p className="font-mono text-xs text-bone-muted/50">{client.author}</p>
@@ -392,24 +404,20 @@
             useEffect(() => {
                 if(!clients || clients.length === 0) return;
                 
-                // --- JOIN LOGIC (Rule 2: Complex joins happen in client JS) ---
-                // 1. Filter rankings by selected category
+                // --- JOIN LOGIC ---
                 const filteredRanks = (rankingsData || mockRankingsData).filter(r => r.category === category);
                 
-                // 2. Group by Rank (e.g., Rank 1 has [Prax, VoidWalker])
                 const grouped = {};
                 filteredRanks.forEach(r => {
                     if (!grouped[r.rank]) grouped[r.rank] = [];
-                    // Find the full client object for this ranking
                     const clientDetails = clients.find(c => c.id === r.client_id);
                     if (clientDetails) {
                         grouped[r.rank].push({ ...clientDetails, note: r.note });
                     }
                 });
 
-                // 3. Convert to Array for rendering
                 const result = Object.keys(grouped)
-                    .sort((a, b) => a - b) // Sort 1, 2, 3...
+                    .sort((a, b) => a - b)
                     .map(rank => ({ rank: parseInt(rank), clients: grouped[rank] }));
                 
                 setRankings(result);
@@ -419,7 +427,6 @@
                 <div className="pt-24 pb-20 px-4 max-w-4xl mx-auto min-h-screen">
                     <div className="text-center mb-12">
                         <h2 className="font-gothic text-5xl text-blood mb-4 glitch-text" data-text="SEASON 6: THE VOID">SEASON 6: THE VOID</h2>
-                        <p className="font-mono text-bone-muted text-sm max-w-xl mx-auto">// RANKINGS UPDATED: TODAY <br/>// NOTE: TIERS ARE BASED ON CONFIG & PING. SKILL ISSUE = BAN.</p>
                     </div>
                     <div className="flex justify-center gap-4 mb-12">
                         <button onClick={() => setCategory('CPVP')} className={`flex items-center gap-2 px-8 py-3 border font-mono font-bold transition-all ${category === 'CPVP' ? 'bg-blood/20 border-blood text-blood shadow-[0_0_20px_rgba(220,38,38,0.4)]' : 'bg-surface border-surface text-bone-muted hover:border-bone-muted'}`}><Gem size={18} /> CPVP (CRYSTAL)</button>
@@ -538,7 +545,7 @@
                                             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/3 h-1 bg-blood opacity-0 group-hover:opacity-100 transition-opacity shadow-[0_0_10px_#DC2626]"></div>
                                             <div className="flex justify-between items-start mb-4">
                                                 <div><h3 className="font-sans font-bold text-2xl text-bone group-hover:text-white transition-colors flex items-center gap-2">{client.name}{client.verified && <CheckCircle size={14} className="text-blood" />}</h3><p className="font-mono text-xs text-bone-muted mt-1">{client.version} • {client.os}</p></div>
-                                                <div className={`px-2 py-1 text-xs font-mono border ${client.status === 'Paid' ? 'border-yellow-600 text-yellow-500' : client.status === 'Private' ? 'border-purple-600 text-purple-500' : client.status === 'Archive' ? 'border-gray-700 text-gray-500' : 'border-green-800 text-green-500'}`}>{client.status.toUpperCase()}</div>
+                                                <div className={`px-2 py-1 text-xs font-mono border ${getStatusColor(client.status)}`}>{client.status.toUpperCase()}</div>
                                             </div>
                                             <p className="text-bone-muted text-sm mb-6 flex-grow border-l-2 border-surface pl-3 group-hover:border-blood/50 transition-colors">{client.desc}</p>
                                             <div className="mt-auto pt-4 border-t border-white/5 flex items-center justify-between">
