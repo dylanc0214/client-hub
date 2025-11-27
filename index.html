@@ -20,7 +20,7 @@
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
 
-    <!-- Supabase JS (The Database Connector) -->
+    <!-- Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <!-- Tailwind Config -->
@@ -85,34 +85,81 @@
 <body>
     <div id="root"></div>
 
-    <!-- React App Script -->
+    <!-- Firebase Init Script (Type Module) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Initialize Firebase
+        const firebaseConfig = JSON.parse(__firebase_config);
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+        // Expose to Global Window
+        window.firebaseDb = db;
+        window.firebaseAuth = auth;
+        window.firebaseAppId = appId;
+        window.firebaseSignInAnonymously = signInAnonymously;
+        window.firebaseOnAuthStateChanged = onAuthStateChanged;
+        window.firebaseCollection = collection;
+        window.firebaseAddDoc = addDoc;
+        window.firebaseOnSnapshot = onSnapshot;
+        window.firebaseServerTimestamp = serverTimestamp;
+    </script>
+
+    <!-- React App Script (Type Babel) -->
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
         const { createClient } = window.supabase;
 
         // --- SUPABASE CONFIGURATION ---
-        // 1. Go to Supabase Dashboard > Project Settings > API
-        // 2. Paste your URL and ANON KEY here
-        const SUPABASE_URL = "https://wzktbrakhdqmqvrgygtg.supabase.co"; 
-        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind6a3RicmFraGRxbXF2cmd5Z3RnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQyMjY3MDIsImV4cCI6MjA3OTgwMjcwMn0.hesAyEwWrCYCcX-C9pNx_PBM2TayaQXi4G029QBEEI8";
+        // REPLACE THESE WITH YOUR REAL KEYS FROM SUPABASE DASHBOARD
+        const SUPABASE_URL = "YOUR_SUPABASE_URL_HERE"; 
+        const SUPABASE_KEY = "YOUR_SUPABASE_ANON_KEY_HERE";
 
-        // Check if config is set, otherwise use Mock Mode
-        const isMockMode = SUPABASE_URL === "https://wzktbrakhdqmqvrgygtg.supabase.co";
+        const isMockMode = SUPABASE_URL === "YOUR_SUPABASE_URL_HERE";
         let supabase = null;
         if (!isMockMode) {
             supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
         }
 
-        // --- MOCK DATA (Fallback if no DB connection) ---
+        // --- DIRECT DOWNLOAD HELPER ---
+        const handleDirectDownload = (url, fileName) => {
+            if (!url) return;
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', fileName || 'file'); 
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        };
+
+        // --- MOCK DATA ---
+        // 1. Clients Table Mock
         const mockClients = [
-            { id: 1, name: "Meteor Client", author: "MeteorDev", version: "v0.5.3", type: "Utility", os: "Windows/Java", status: "Free", desc: "The standard for modern anarchy. Open source, massive module list.", features: ["AutoCrystal", "AnchorAura", "Trident+", "ElytraFly"], updated: "2 days ago", verified: true, configUrl: "#", downloadUrl: "#" },
-            { id: 2, name: "Prax V4", author: "PraxTeam", version: "v4.1.0", type: "CPvP", os: "Android/iOS", status: "Paid", price: "$15.00", desc: "Dominate the crystal meta. Optimized for Bedrock touch controls.", features: ["Touch Crystal", "Hitbox Expand", "AutoTotem (Fast)", "Velocity"], updated: "1 week ago", verified: true, configUrl: "#", downloadUrl: "#" },
-            { id: 3, name: "VoidWalker CN", author: "Shadow_882", version: "Build 882", type: "Anarchy", os: "Android", status: "Private", desc: "Private Chinese bypasses. Works on NetEase and 2b2tPE.", features: ["NetEase Bypass", "Flight (Packet)", "Phase", "Nuker"], updated: "Yesterday", verified: false, configUrl: null, downloadUrl: null },
-            { id: 4, name: "Toolbox Patched", author: "MrArm", version: "vLegacy", type: "Utility", os: "Android", status: "Archive", desc: "The legendary toolkit. No longer maintained but good for history.", features: ["NBT Editor", "Enchanting", "X-Ray", "Teleport"], updated: "2 years ago", verified: true, deathNote: "Patched by Mojang (1.19)", deathDate: "Nov 2022", configUrl: "#", downloadUrl: "#" },
-            { id: 5, name: "Horion", author: "Horion Team", version: "v1.2.0", type: "Utility", os: "Windows 10/11", status: "Free", desc: "Best free utility for Windows Bedrock edition.", features: ["InstaBreak", "AirJump", "NoFall", "Scaffold"], updated: "3 days ago", verified: true, configUrl: "#", downloadUrl: "#" },
-            { id: 6, name: "Zephyr", author: "ZephyrDev", version: "v2.0", type: "CPvP", os: "Windows", status: "Free", desc: "Lightweight and deadly. Known for extreme reach in SPvP.", features: ["Reach", "Velocity", "Hitbox", "AimAssist"], updated: "1 day ago", verified: true, configUrl: null, downloadUrl: "#" },
-            { id: 7, name: "Fade Client", author: "FadeTeam", version: "v0.9-beta", type: "Anarchy", os: "Android", status: "Archive", desc: "Was promising but dev quit after drama. Open source now.", features: ["Fly", "Killaura", "Speed"], updated: "1 year ago", verified: false, deathNote: "Dev Abandoned", deathDate: "Jan 2024", configUrl: null, downloadUrl: "#" },
-            { id: 8, name: "Osiris", author: "OsirisCorp", version: "v1.0", type: "Utility", os: "iOS", status: "Archive", desc: "One of the few iOS injected clients. Stopped working after iOS 16.", features: ["Esp", "Tracers", "ChestStealer"], updated: "3 years ago", verified: true, deathNote: "iOS Security Update", deathDate: "Sept 2022", configUrl: null, downloadUrl: "#" }
+            { id: 1, name: "Meteor Client", author: "MeteorDev", version: "v0.5.3", type: "Utility", os: "Windows/Java", status: "Free", desc: "The standard for modern anarchy.", features: ["AutoCrystal", "ElytraFly"], updated: "2 days ago", verified: true, configUrl: "./artifacts/configs/meteor.cfg", downloadUrl: "./artifacts/meteor.dll" },
+            { id: 2, name: "Prax V4", author: "PraxTeam", version: "v4.1.0", type: "CPvP", os: "Android/iOS", status: "Paid", price: "$15.00", desc: "Dominate the crystal meta.", features: ["Touch Crystal", "Velocity"], updated: "1 week ago", verified: true, configUrl: "./artifacts/configs/prax.cfg", downloadUrl: null },
+            { id: 3, name: "VoidWalker CN", author: "Shadow_882", version: "Build 882", type: "Anarchy", os: "Android", status: "Private", desc: "Private Chinese bypasses.", features: ["NetEase Bypass", "Nuker"], updated: "Yesterday", verified: false, configUrl: null, downloadUrl: null },
+            { id: 4, name: "Toolbox Patched", author: "MrArm", version: "vLegacy", type: "Utility", os: "Android", status: "Archive", desc: "Legendary toolkit.", features: ["NBT Editor", "Teleport"], updated: "2 years ago", verified: true, deathNote: "Patched by Mojang", deathDate: "Nov 2022", configUrl: "./artifacts/configs/toolbox.cfg", downloadUrl: "./artifacts/toolbox.apk" },
+            { id: 5, name: "Horion", author: "Horion Team", version: "v1.2.0", type: "Utility", os: "Windows 10/11", status: "Free", desc: "Best free utility.", features: ["InstaBreak", "Scaffold"], updated: "3 days ago", verified: true, configUrl: "./artifacts/configs/horion.cfg", downloadUrl: "./artifacts/horion.dll" },
+            { id: 6, name: "Zephyr", author: "ZephyrDev", version: "v2.0", type: "CPvP", os: "Windows", status: "Free", desc: "Lightweight and deadly.", features: ["Reach", "Hitbox"], updated: "1 day ago", verified: true, configUrl: null, downloadUrl: "./artifacts/zephyr.dll" },
+            { id: 7, name: "Fade Client", author: "FadeTeam", version: "v0.9-beta", type: "Anarchy", os: "Android", status: "Archive", desc: "Dev quit after drama.", features: ["Fly", "Speed"], updated: "1 year ago", verified: false, deathNote: "Dev Abandoned", deathDate: "Jan 2024", configUrl: null, downloadUrl: "./artifacts/fade.apk" },
+            { id: 8, name: "Osiris", author: "OsirisCorp", version: "v1.0", type: "Utility", os: "iOS", status: "Archive", desc: "iOS injected client.", features: ["Esp", "ChestStealer"], updated: "3 years ago", verified: true, deathNote: "iOS Security Update", deathDate: "Sept 2022", configUrl: null, downloadUrl: "./artifacts/osiris.dylib" }
+        ];
+
+        // 2. Ranking Table Mock (This would be 'meta_rankings' in Supabase)
+        const mockRankingsData = [
+            { client_id: 2, category: 'CPVP', rank: 1, note: "God Tier Crystal Speed" },
+            { client_id: 3, category: 'CPVP', rank: 1, note: "Best Bypass" }, // Tied
+            { client_id: 1, category: 'CPVP', rank: 2, note: "Solid Anchor Aura" },
+            { client_id: 5, category: 'CPVP', rank: 3, note: "Decent but outdated" },
+            { client_id: 6, category: 'SPVP', rank: 1, note: "Reach is undetectable" },
+            { client_id: 2, category: 'SPVP', rank: 2, note: "Good Velocity" },
+            { client_id: 4, category: 'SPVP', rank: 2, note: "If you have priv method" }, // Tied
+            { client_id: 1, category: 'SPVP', rank: 3, note: "Too bulky" },
         ];
 
         // --- ICONS ---
@@ -143,10 +190,7 @@
             const [loading, setLoading] = useState(true);
 
             useEffect(() => {
-                // Real DB Logic
                 if (!isMockMode) {
-                    // Supabase doesn't have real-time aggregate listeners easily without edge functions, 
-                    // so we just fetch once on load for now.
                     const fetchRatings = async () => {
                         const { data, error } = await supabase.from('ratings').select('value').eq('client_id', clientId);
                         if (!error && data.length > 0) {
@@ -157,7 +201,6 @@
                     };
                     fetchRatings();
                 } else {
-                    // Mock Logic
                     setTimeout(() => {
                         setRating(4.5);
                         setLoading(false);
@@ -168,7 +211,6 @@
             const handleRate = async (val) => {
                 setUserRating(val);
                 if (!isMockMode) {
-                    // Insert into Supabase
                     const { error } = await supabase.from('ratings').insert({ client_id: clientId, value: val, user_id: 'anon_user' });
                     if (error) console.error("Rating failed", error);
                 } else {
@@ -209,14 +251,12 @@
 
             useEffect(() => {
                 if (!isMockMode) {
-                    // Fetch existing
                     const fetchComments = async () => {
                         const { data } = await supabase.from('comments').select('*').eq('client_id', clientId).order('created_at', { ascending: false });
                         if(data) setComments(data);
                     };
                     fetchComments();
 
-                    // Subscribe to new
                     const subscription = supabase
                         .channel('public:comments')
                         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'comments', filter: `client_id=eq.${clientId}` }, payload => {
@@ -226,7 +266,6 @@
 
                     return () => { supabase.removeChannel(subscription); }
                 } else {
-                    // Mock Data
                     setComments([
                         { id: 1, user_display: "AnarchyGod", content: "Is this safe for 2b2tPE?", created_at: new Date().toISOString() },
                         { id: 2, user_display: "NullPointer", content: "Vouch for this dev.", created_at: new Date().toISOString() }
@@ -309,7 +348,7 @@
                                     <p>CAUSE: {client.deathNote}</p>
                                 </div>
                                 <div className="mt-auto flex justify-center">
-                                    <button className="bg-transparent border border-bone-muted/30 text-bone-muted/50 hover:text-bone hover:border-bone px-6 py-2 text-xs font-mono flex items-center gap-2 transition-all"><Code size={14} /> [EXHUME ARCHIVE]</button>
+                                    <button onClick={(e) => { e.stopPropagation(); handleDirectDownload(client.downloadUrl, client.name + ".dll"); }} className="bg-transparent border border-bone-muted/30 text-bone-muted/50 hover:text-bone hover:border-bone px-6 py-2 text-xs font-mono flex items-center gap-2 transition-all"><Code size={14} /> [EXHUME ARCHIVE]</button>
                                 </div>
                             </div>
                         ))}
@@ -346,26 +385,66 @@
              );
         };
 
-        const MetaLeaderboard = ({ clients }) => {
-            // Simplified logic for brevity, ideally fetch from Supabase
-            const getRank = (category) => {
-                if (category === 'CPVP') return [{rank:1, clients:[clients[1], clients[2]]}]; 
-                return [{rank:1, clients:[clients[5]]}];
-            }
+        const MetaLeaderboard = ({ clients, rankingsData }) => {
             const [category, setCategory] = useState('CPVP');
-            const rankings = getRank(category);
+            const [rankings, setRankings] = useState([]);
+
+            useEffect(() => {
+                if(!clients || clients.length === 0) return;
+                
+                // --- JOIN LOGIC (Rule 2: Complex joins happen in client JS) ---
+                // 1. Filter rankings by selected category
+                const filteredRanks = (rankingsData || mockRankingsData).filter(r => r.category === category);
+                
+                // 2. Group by Rank (e.g., Rank 1 has [Prax, VoidWalker])
+                const grouped = {};
+                filteredRanks.forEach(r => {
+                    if (!grouped[r.rank]) grouped[r.rank] = [];
+                    // Find the full client object for this ranking
+                    const clientDetails = clients.find(c => c.id === r.client_id);
+                    if (clientDetails) {
+                        grouped[r.rank].push({ ...clientDetails, note: r.note });
+                    }
+                });
+
+                // 3. Convert to Array for rendering
+                const result = Object.keys(grouped)
+                    .sort((a, b) => a - b) // Sort 1, 2, 3...
+                    .map(rank => ({ rank: parseInt(rank), clients: grouped[rank] }));
+                
+                setRankings(result);
+            }, [category, clients, rankingsData]);
 
             return (
                 <div className="pt-24 pb-20 px-4 max-w-4xl mx-auto min-h-screen">
                     <div className="text-center mb-12">
                         <h2 className="font-gothic text-5xl text-blood mb-4 glitch-text" data-text="SEASON 6: THE VOID">SEASON 6: THE VOID</h2>
+                        <p className="font-mono text-bone-muted text-sm max-w-xl mx-auto">// RANKINGS UPDATED: TODAY <br/>// NOTE: TIERS ARE BASED ON CONFIG & PING. SKILL ISSUE = BAN.</p>
                     </div>
                     <div className="flex justify-center gap-4 mb-12">
-                        <button onClick={() => setCategory('CPVP')} className={`flex items-center gap-2 px-8 py-3 border font-mono font-bold transition-all ${category === 'CPVP' ? 'bg-blood/20 border-blood text-blood' : 'bg-surface border-surface text-bone-muted'}`}><Gem size={18} /> CPVP</button>
-                        <button onClick={() => setCategory('SPVP')} className={`flex items-center gap-2 px-8 py-3 border font-mono font-bold transition-all ${category === 'SPVP' ? 'bg-blood/20 border-blood text-blood' : 'bg-surface border-surface text-bone-muted'}`}><Sword size={18} /> SPVP</button>
+                        <button onClick={() => setCategory('CPVP')} className={`flex items-center gap-2 px-8 py-3 border font-mono font-bold transition-all ${category === 'CPVP' ? 'bg-blood/20 border-blood text-blood shadow-[0_0_20px_rgba(220,38,38,0.4)]' : 'bg-surface border-surface text-bone-muted hover:border-bone-muted'}`}><Gem size={18} /> CPVP (CRYSTAL)</button>
+                        <button onClick={() => setCategory('SPVP')} className={`flex items-center gap-2 px-8 py-3 border font-mono font-bold transition-all ${category === 'SPVP' ? 'bg-blood/20 border-blood text-blood shadow-[0_0_20px_rgba(220,38,38,0.4)]' : 'bg-surface border-surface text-bone-muted hover:border-bone-muted'}`}><Sword size={18} /> SPVP (SWORD)</button>
                     </div>
-                    {/* Placeholder for rankings UI to save space */}
-                    <div className="text-center text-bone-muted font-mono text-sm"> // RANKINGS LOADING...</div>
+                    
+                    <div className="space-y-4">
+                        {rankings.map((tier, index) => (
+                            <div key={tier.rank} className="relative group">
+                                <div className={`absolute -left-3 md:-left-6 top-1/2 -translate-y-1/2 -rotate-90 font-mono font-bold text-xs tracking-widest ${tier.rank === 1 ? 'text-blood' : 'text-bone-muted/50'}`}>RANK_0{tier.rank}</div>
+                                <div className={`flex flex-col md:flex-row bg-surface/80 border ${tier.rank === 1 ? 'border-blood/50 shadow-[0_0_15px_rgba(220,38,38,0.15)]' : 'border-surface'} p-6 gap-6 items-center backdrop-blur-sm transition-all hover:bg-surface`}>
+                                    <div className="shrink-0"><div className={`w-12 h-12 flex items-center justify-center font-gothic text-3xl ${tier.rank === 1 ? 'text-blood animate-pulse-slow' : 'text-bone-muted'}`}>{tier.rank === 1 ? 'I' : tier.rank === 2 ? 'II' : 'III'}</div></div>
+                                    <div className="flex-grow w-full grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {tier.clients.map((client, idx) => (
+                                            <div key={idx} className="bg-void/50 border border-white/5 p-4 flex flex-col justify-center relative overflow-hidden group/card hover:border-blood/30 transition-colors">
+                                                {tier.clients.length > 1 && (<div className="absolute top-2 right-2 text-[10px] font-mono text-bone-muted bg-surface px-1 border border-white/10">TIED</div>)}
+                                                <h4 className="font-sans font-bold text-lg text-bone group-hover/card:text-white transition-colors">{client.name}</h4>
+                                                <p className="font-mono text-xs text-bone-muted mt-1 flex items-center gap-2"><span className="w-1 h-1 bg-blood rounded-full"></span>{client.note}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             );
         };
@@ -389,99 +468,142 @@
             const [selectedClient, setSelectedClient] = useState(null);
             const [modalClient, setModalClient] = useState(null);
             const [isModalOpen, setIsModalOpen] = useState(false);
-            const [data, setData] = useState(mockClients);
+            const [clients, setClients] = useState(mockClients);
+            const [rankings, setRankings] = useState(mockRankingsData);
 
             useEffect(() => {
                 if (!isMockMode) {
+                    // Fetch Clients
                     const fetchClients = async () => {
-                        const { data: dbClients, error } = await supabase.from('clients').select('*');
-                        if (dbClients) setData(dbClients);
+                        const { data: dbClients } = await supabase.from('clients').select('*');
+                        if (dbClients) setClients(dbClients);
+                    };
+                    // Fetch Rankings
+                    const fetchRankings = async () => {
+                        const { data: dbRankings } = await supabase.from('meta_rankings').select('*');
+                        if (dbRankings) setRankings(dbRankings);
                     };
                     fetchClients();
+                    fetchRankings();
                 }
             }, []);
 
             const openModal = (e, client) => { e.stopPropagation(); setModalClient(client); setIsModalOpen(true); };
             const goToDetail = (client) => { setSelectedClient(client); setView('detail'); window.scrollTo(0, 0); };
             const goHome = () => { setView('home'); setSelectedClient(null); };
-            const goMeta = () => setView('meta');
-            const goGraveyard = () => setView('graveyard');
-            const goInjector = () => setView('injector');
+            const goMeta = (e) => { if(e) e.preventDefault(); setView('meta'); window.scrollTo(0, 0); };
+            const goGraveyard = (e) => { if (e) e.preventDefault(); setView('graveyard'); window.scrollTo(0, 0); };
+            const goInjector = (e) => { if (e) e.preventDefault(); setView('injector'); window.scrollTo(0, 0); };
 
-            const filteredClients = filter === 'All' ? data : data.filter(c => c.type === filter || c.status === filter);
+            const filteredClients = filter === 'All' ? clients : clients.filter(c => c.type === filter || c.status === filter);
 
             return (
                 <div className="min-h-screen font-sans selection:bg-blood selection:text-white relative overflow-hidden">
                     <div className="fixed inset-0 -z-10 pointer-events-none">
-                         <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-deep-blood/20 mix-blend-screen filter blur-[100px]"></div>
+                         <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-deep-blood/20 mix-blend-screen filter blur-[100px] rounded-[30%_70%_70%_30%_/_30%_30%_70%_70%] animate-pulse-slow"></div>
+                         <div className="absolute bottom-[10%] right-[-5%] w-[600px] h-[600px] bg-blood/10 mix-blend-screen filter blur-[120px] rounded-[50%_50%_20%_80%_/_25%_65%_35%_75%] animate-pulse-slow" style={{animationDelay: '1s'}}></div>
+                         <div className="absolute top-[30%] left-[40%] w-[300px] h-[300px] bg-deep-blood/10 mix-blend-screen filter blur-[80px] rounded-full animate-float"></div>
                     </div>
 
                     <nav className="fixed top-0 w-full z-40 bg-void/90 backdrop-blur-md border-b border-surface/50">
                         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-                            <div className="flex items-center gap-2 group cursor-pointer" onClick={goHome}><Skull className="text-blood" /><span className="font-gothic text-2xl tracking-wider group-hover:text-blood">Only-NONE</span></div>
-                            <div className="hidden md:flex gap-8 font-mono text-sm text-bone-muted">
-                                <button onClick={goHome} className="hover:text-blood">ARMORY</button>
-                                <button onClick={goMeta} className="hover:text-blood">THE META</button>
-                                <button onClick={goGraveyard} className="hover:text-blood">GRAVEYARD</button>
-                                <button onClick={goInjector} className="hover:text-blood">INJECTOR</button>
+                            <div className="flex items-center gap-2 group cursor-pointer" onClick={goHome}><Skull className="text-blood group-hover:rotate-12 transition-transform" />
+                                <span className="font-gothic text-2xl tracking-wider group-hover:text-blood transition-colors">Only-NONE</span>
                             </div>
-                            <button className="bg-[#5865F2]/10 border border-[#5865F2] px-4 py-1.5 text-xs font-mono text-[#5865F2] hover:bg-[#5865F2] hover:text-white flex items-center gap-2"><Discord size={16} /> [JOIN]</button>
+                            <div className="hidden md:flex gap-8 font-mono text-sm text-bone-muted">
+                                <button onClick={goHome} className={`hover:text-blood transition-colors ${view === 'home' ? 'text-blood' : ''}`}>ARMORY</button>
+                                <button onClick={goMeta} className={`hover:text-blood transition-colors ${view === 'meta' ? 'text-blood' : ''}`}>THE META</button>
+                                <button onClick={goGraveyard} className={`hover:text-blood transition-colors ${view === 'graveyard' ? 'text-blood' : ''}`}>GRAVEYARD</button>
+                                <button onClick={goInjector} className={`hover:text-blood transition-colors ${view === 'injector' ? 'text-blood' : ''}`}>INJECTOR</button>
+                            </div>
+                            <button className="bg-[#5865F2]/10 border border-[#5865F2] px-4 py-1.5 text-xs font-mono text-[#5865F2] hover:bg-[#5865F2] hover:text-white transition-all flex items-center gap-2"><Discord size={16} /> [JOIN DISCORD]</button>
                         </div>
                     </nav>
 
                     {view === 'home' && (
-                        <section className="max-w-7xl mx-auto px-4 pt-32 pb-20">
-                            <div className="text-center mb-12"><h1 className="font-gothic text-6xl glitch-text" data-text="GATE TO THE UNDERWORLD">GATE TO THE UNDERWORLD</h1></div>
-                            <div className="flex flex-wrap gap-4 justify-center mb-12">
-                                {['All', 'Utility', 'CPvP', 'Anarchy'].map(cat => <button key={cat} onClick={() => setFilter(cat)} className={`px-6 py-2 font-mono text-sm border transition-all ${filter === cat ? 'border-blood text-blood' : 'border-surface text-bone-muted'}`}>{cat.toUpperCase()}</button>)}
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {filteredClients.map(client => (
-                                    <div key={client.id} onClick={() => goToDetail(client)} className="group relative bg-surface/80 border border-surface hover:border-blood transition-all p-6 cursor-pointer">
-                                        <div className="flex justify-between items-start mb-4">
-                                            <div><h3 className="font-sans font-bold text-2xl text-bone group-hover:text-white">{client.name}</h3><p className="font-mono text-xs text-bone-muted">{client.version}</p></div>
-                                            <div className="px-2 py-1 text-xs font-mono border border-green-800 text-green-500">{client.status.toUpperCase()}</div>
+                        <>
+                            <section className="pt-32 pb-20 px-4 flex flex-col items-center justify-center text-center relative">
+                                <div className="mb-6 relative"><h1 className="font-gothic text-6xl md:text-8xl glitch-text" data-text="GATE TO THE UNDERWORLD">GATE TO THE UNDERWORLD</h1></div>
+                                <p className="font-mono text-bone-muted max-w-2xl text-sm md:text-base mb-8">// SYSTEM.INIT >> The premier hub for CPvP, Utility, and Anarchy clients. <br/>// WARNING >> Proceed at your own risk.</p>
+                                <div className="flex flex-wrap gap-4 justify-center">
+                                    {['All', 'Utility', 'CPvP', 'Anarchy', 'Archive'].map((cat) => (
+                                        <button key={cat} onClick={() => setFilter(cat)} className={`px-6 py-2 font-mono text-sm border transition-all duration-300 ${filter === cat ? 'border-blood text-blood shadow-[0_0_15px_rgba(220,38,38,0.3)] bg-deep-blood/10' : 'border-surface text-bone-muted hover:border-bone-muted'}`}>{cat.toUpperCase()}</button>
+                                    ))}
+                                </div>
+                            </section>
+                            <section className="max-w-7xl mx-auto px-4 pb-20">
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {filteredClients.map((client) => (
+                                        <div key={client.id} onClick={() => goToDetail(client)} className="cursor-pointer group relative bg-surface/80 backdrop-blur-sm border border-surface hover:border-blood transition-all duration-300 p-6 flex flex-col h-full hover:shadow-[0_0_20px_rgba(220,38,38,0.15)] overflow-hidden">
+                                            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/3 h-1 bg-blood opacity-0 group-hover:opacity-100 transition-opacity shadow-[0_0_10px_#DC2626]"></div>
+                                            <div className="flex justify-between items-start mb-4">
+                                                <div><h3 className="font-sans font-bold text-2xl text-bone group-hover:text-white transition-colors flex items-center gap-2">{client.name}{client.verified && <CheckCircle size={14} className="text-blood" />}</h3><p className="font-mono text-xs text-bone-muted mt-1">{client.version} • {client.os}</p></div>
+                                                <div className={`px-2 py-1 text-xs font-mono border ${client.status === 'Paid' ? 'border-yellow-600 text-yellow-500' : client.status === 'Private' ? 'border-purple-600 text-purple-500' : client.status === 'Archive' ? 'border-gray-700 text-gray-500' : 'border-green-800 text-green-500'}`}>{client.status.toUpperCase()}</div>
+                                            </div>
+                                            <p className="text-bone-muted text-sm mb-6 flex-grow border-l-2 border-surface pl-3 group-hover:border-blood/50 transition-colors">{client.desc}</p>
+                                            <div className="mt-auto pt-4 border-t border-white/5 flex items-center justify-between">
+                                                <span className="text-xs font-mono text-gray-600">{client.updated}</span>
+                                                {client.status === 'Private' ? (<button onClick={(e) => openModal(e, client)} className="bg-purple-900/20 text-purple-400 border border-purple-900 px-4 py-2 text-sm font-bold font-mono hover:bg-purple-900/40 transition-colors flex items-center gap-2"><Lock size={14} /> CONNECT</button>) : client.status === 'Paid' ? (<button className="bg-blood/10 text-blood border border-blood px-4 py-2 text-sm font-bold font-mono hover:bg-blood hover:text-white transition-all flex items-center gap-2"><Zap size={14} /> PURCHASE</button>) : (<button className="bg-surface text-bone border border-bone-muted px-4 py-2 text-sm font-bold font-mono hover:bg-bone hover:text-black transition-all flex items-center gap-2"><Download size={14} /> DOWNLOAD</button>)}
+                                            </div>
                                         </div>
-                                        <p className="text-bone-muted text-sm">{client.desc}</p>
+                                    ))}
+                                </div>
+                            </section>
+                        </>
+                    ) : view === 'meta' ? (
+                        <MetaLeaderboard clients={clients} rankingsData={rankings} />
+                    ) : view === 'graveyard' ? (
+                        <Graveyard onNavigate={goToDetail} clients={clients} />
+                    ) : view === 'injector' ? (
+                        <InjectorPage />
+                    ) : (
+                        <section className="pt-24 pb-20 px-4 max-w-5xl mx-auto min-h-screen">
+                            <button onClick={goHome} className="mb-6 flex items-center gap-2 text-bone-muted hover:text-blood transition-colors font-mono text-sm"><ArrowLeft size={16} /> RETURN TO ARMORY</button>
+                            {selectedClient && (
+                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                                    <div className="lg:col-span-2 space-y-6">
+                                        <div className="bg-surface/80 border border-deep-blood/30 p-8 relative overflow-hidden">
+                                             <div className="absolute top-0 right-0 p-4 opacity-10"><Skull size={100} /></div>
+                                             <div className="flex items-center gap-3 mb-2"><h1 className="font-gothic text-5xl text-white">{selectedClient.name}</h1>{selectedClient.verified && <CheckCircle className="text-blood" size={28} />}</div>
+                                             <p className="font-mono text-blood mb-6">{selectedClient.author} // {selectedClient.version}</p>
+                                             <div className="h-64 bg-void border border-surface flex items-center justify-center mb-6 text-bone-muted/50 font-mono text-xs">[VIDEO PREVIEW PLACEHOLDER]</div>
+                                             <p className="text-bone-muted leading-relaxed mb-6">{selectedClient.desc}</p>
+                                             <div className="grid grid-cols-2 gap-4 font-mono text-sm mb-6">
+                                                {selectedClient.features.map((feat, i) => (<div key={i} className="flex items-center gap-2 text-bone"><span className="text-blood">></span> {feat}</div>))}
+                                             </div>
+                                             <div className="flex gap-4 border-t border-surface pt-6">
+                                                 {selectedClient.status === 'Private' ? (<button onClick={(e) => openModal(e, selectedClient)} className="flex-1 bg-purple-900/20 text-purple-400 border border-purple-900 py-3 font-bold font-mono hover:bg-purple-900/40 transition-colors flex justify-center items-center gap-2"><Lock size={18} /> REQUEST ACCESS</button>) : selectedClient.status === 'Archive' ? (<button className="flex-1 bg-surface border border-deep-blood text-blood py-3 font-bold font-mono hover:bg-deep-blood/20 transition-all flex justify-center items-center gap-2"><Code size={18} /> EXHUME (DOWNLOAD)</button>) : (<button className="flex-1 bg-blood text-white py-3 font-bold font-mono hover:bg-red-700 transition-all shadow-[0_0_15px_rgba(220,38,38,0.4)] flex justify-center items-center gap-2"><Download size={18} /> {selectedClient.status === 'Paid' ? 'PURCHASE NOW' : 'DOWNLOAD NOW'}</button>)}
+                                                 
+                                                 {selectedClient.configUrl && (
+                                                     <button onClick={() => handleDirectDownload(selectedClient.configUrl, selectedClient.name + ".cfg")} className="flex-none bg-surface border border-bone-muted text-bone-muted hover:border-white hover:text-white px-4 transition-all flex items-center gap-2" title="Download Official Config">
+                                                         <FileCog size={18} /> CONFIG
+                                                     </button>
+                                                 )}
+                                             </div>
+                                        </div>
+                                        <CommentSection clientId={selectedClient.id} />
                                     </div>
-                                ))}
-                            </div>
+                                    <div className="space-y-6">
+                                        <div className="bg-surface border border-surface p-6">
+                                            <h3 className="font-mono text-bone-muted text-xs mb-4 uppercase tracking-widest">TECHNICAL_DATA</h3>
+                                            <div className="space-y-3 font-mono text-sm">
+                                                <div className="flex justify-between border-b border-surface pb-2"><span className="text-bone-muted">OS</span><span className="text-bone">{selectedClient.os}</span></div>
+                                                <div className="flex justify-between border-b border-surface pb-2"><span className="text-bone-muted">TYPE</span><span className="text-bone">{selectedClient.type}</span></div>
+                                                <div className="flex justify-between border-b border-surface pb-2"><span className="text-bone-muted">UPDATED</span><span className="text-bone">{selectedClient.updated}</span></div>
+                                                {selectedClient.deathDate && (<div className="flex justify-between border-t border-deep-blood/30 pt-2 mt-2 text-deep-blood"><span>STATUS</span><span>DECEASED ({selectedClient.deathDate})</span></div>)}
+                                            </div>
+                                            <RatingSystem clientId={selectedClient.id} />
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                         </section>
                     )}
 
-                    {view === 'detail' && selectedClient && (
-                        <section className="pt-24 pb-20 px-4 max-w-5xl mx-auto">
-                            <button onClick={goHome} className="mb-6 flex items-center gap-2 text-bone-muted hover:text-blood font-mono text-sm"><ArrowLeft size={16} /> RETURN</button>
-                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                                <div className="lg:col-span-2 space-y-6">
-                                    <div className="bg-surface/80 border border-deep-blood/30 p-8">
-                                        <h1 className="font-gothic text-5xl text-white mb-2">{selectedClient.name}</h1>
-                                        <p className="font-mono text-blood mb-6">{selectedClient.author} // {selectedClient.version}</p>
-                                        <p className="text-bone-muted leading-relaxed mb-6">{selectedClient.desc}</p>
-                                        <div className="flex gap-4 border-t border-surface pt-6">
-                                            {selectedClient.status === 'Private' ? 
-                                                <button onClick={(e) => openModal(e, selectedClient)} className="flex-1 bg-purple-900/20 text-purple-400 border border-purple-900 py-3 font-bold font-mono"><Lock size={18} /> REQUEST</button> : 
-                                                <button onClick={() => window.open(selectedClient.downloadUrl || '#', '_blank')} className="flex-1 bg-blood text-white py-3 font-bold font-mono hover:bg-red-700 shadow-[0_0_15px_rgba(220,38,38,0.4)] flex justify-center gap-2"><Download size={18} /> DOWNLOAD</button>
-                                            }
-                                            {selectedClient.configUrl && <button onClick={() => window.open(selectedClient.configUrl, '_blank')} className="flex-none bg-surface border border-bone-muted text-bone-muted hover:border-white hover:text-white px-4 flex items-center gap-2"><FileCog size={18} /> CONFIG</button>}
-                                        </div>
-                                    </div>
-                                    <CommentSection clientId={selectedClient.id} />
-                                </div>
-                                <div className="space-y-6">
-                                    <div className="bg-surface border border-surface p-6">
-                                        <h3 className="font-mono text-bone-muted text-xs mb-4 uppercase tracking-widest">TECHNICAL_DATA</h3>
-                                        <RatingSystem clientId={selectedClient.id} />
-                                    </div>
-                                </div>
-                            </div>
-                        </section>
-                    )}
-
-                    {view === 'meta' && <MetaLeaderboard clients={data} />}
-                    {view === 'graveyard' && <Graveyard onNavigate={goToDetail} clients={data} />}
-                    {view === 'injector' && <InjectorPage />}
-
+                    <footer className="border-t border-surface bg-void py-8 mt-12 text-center font-mono text-xs text-bone-muted relative z-10">
+                        <p className="mb-2">ONLY-NONE PROJECT © 2025</p>
+                        <p className="opacity-50">BUILT IN THE SHADOWS OF KL</p>
+                    </footer>
                     <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} client={modalClient} />
                 </div>
             );
