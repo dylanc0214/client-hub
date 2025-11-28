@@ -117,8 +117,8 @@
 
         // --- SUPABASE CONFIGURATION ---
         // REPLACE THESE WITH YOUR REAL KEYS
-        const SUPABASE_URL = "YOUR_SUPABASE_URL_HERE"; 
-        const SUPABASE_KEY = "YOUR_SUPABASE_ANON_KEY_HERE";
+        const SUPABASE_URL = "https://wzktbrakhdqmqvrgygtg.supabase.co"; 
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind6a3RicmFraGRxbXF2cmd5Z3RnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQyMjY3MDIsImV4cCI6MjA3OTgwMjcwMn0.hesAyEwWrCYCcX-C9pNx_PBM2TayaQXi4G029QBEEI8";
 
         const isMockMode = SUPABASE_URL === "YOUR_SUPABASE_URL_HERE";
         
@@ -455,8 +455,16 @@
                     setLoading(true);
                     if (!isMockMode) {
                         try {
+                            console.log("Attempting to fetch clients...");
                             const { data: dbClients, error: errClients } = await supabase.from('clients').select('*');
-                            if (errClients) throw errClients;
+                            
+                            if (errClients) {
+                                console.error("Supabase Error (Clients):", errClients);
+                                throw errClients;
+                            }
+                            
+                            console.log("Supabase Data (Clients):", dbClients); // Check console to see if array is empty []
+                            
                             if (dbClients) setClients(dbClients);
 
                             const { data: dbRankings, error: errRankings } = await supabase.from('meta_rankings').select('*');
